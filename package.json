@@ -1,18 +1,19 @@
 {
   "name": "nightreign-saves-seamless-to-steam",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Helps user to automatically migrate Steam saves to SeamlessCoop or viceversa",
   "homepage": "https://github.com/AlexanderArmua/nightreign-seamless-to-steam#readme",
   "license": "ISC",
   "author": "Alexander Armua <alexanderarmua1@gmail.com>",
-  "type": "commonjs",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "node index.js",
-    "build": "pkg index.js --targets node18-win-x64 --output SaveManager.exe"
+    "dev": "bun run src/main.ts",
+    "check": "tsc --noEmit",
+    "build": "bun build --compile src/main.ts --target=bun-windows-x64 --outfile SaveManager.exe"
   },
   "devDependencies": {
-    "pkg": "^5.8.1"
+    "bun-types": "latest",
+    "typescript": "^5.7"
   },
   "keywords": [
     "nightreign",
@@ -23,9 +24,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AlexanderArmua/nightreign-seamless-to-steam.git"
-  },
-  "engines": {
-    "node": ">=14.21.3 <18.18.0"
-  },
-  "os": ["win64"]
+  }
 }
