@@ -51,48 +51,92 @@ export function printConversionResult(result: ConversionResult): void {
 export async function promptConversionChoice(
   state: SaveDirectoryState
 ): Promise<ConversionChoice | null> {
-  const readline = await import("readline");
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  const options: { label: string; choice: ConversionChoice }[] = [];
 
-  const ask = (query: string): Promise<string> =>
-    new Promise((resolve) => rl.question(query, resolve));
-
-  try {
-    info("Available conversions based on your current files:");
-
-    const validOptions: string[] = [];
-
-    if (state.hasSteamSave) {
-      info("1. From Steam to Coop (You played Steam, want to play Coop)");
-      validOptions.push("1");
-    } else {
-      warning("[-] Option 1 unavailable: No Steam save (.sl2) found.");
-    }
-
-    if (state.hasCoopSave) {
-      info("2. From Coop to Steam (You played Coop, want to play Steam)");
-      validOptions.push("2");
-    } else {
-      warning("[-] Option 2 unavailable: No Coop save (.co2) found.");
-    }
-
-    const answer = await ask(`${COLORS.white}\nEnter your choice: ${COLORS.reset}`);
-
-    if (!validOptions.includes(answer.trim())) {
-      error("\n[!] Invalid option or file not available. Exiting...");
-      return null;
-    }
-
-    if (answer.trim() === "1") {
-      return { from: "steam", to: "coop" };
-    }
-    return { from: "coop", to: "steam" };
-  } finally {
-    rl.close();
+  if (state.hasSteamSave) {
+    options.push({
+      label: "Steam → Coop (You played Steam, want to play Coop)",
+      choice: { from: "steam", to: "coop" },
+    });
   }
+  if (state.hasCoopSave) {
+    options.push({
+      label: "Coop → Steam (You played Coop, want to play Steam)",
+      choice: { from: "coop", to: "steam" },
+    });
+  }
+
+  if (options.length === 0) {
+    error("[!] No save files available to convert.");
+    return null;
+  }
+
+  info("Select a conversion (↑/↓ to move, Enter to confirm):\n");
+
+  let selected = 0;
+
+  const render = () => {
+    // Move cursor up to overwrite previous render (skip on first render)
+    if (rendered) {
+      process.stdout.write(`\x1b[${options.length}A`);
+    }
+    for (let i = 0; i < options.length; i++) {
+      process.stdout.write("\x1b[2K"); // clear line
+      if (i === selected) {
+        process.stdout.write(`${COLORS.green}  > ${options[i].label}${COLORS.reset}\n`);
+      } else {
+        process.stdout.write(`${COLORS.white}    ${options[i].label}${COLORS.reset}\n`);
+      }
+    }
+  };
+
+  let rendered = false;
+  process.stdout.write("\x1b[?25l"); // hide cursor
+  render();
+  rendered = true;
+
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+  }
+  process.stdin.resume();
+
+  return new Promise<ConversionChoice | null>((resolve) => {
+    const cleanup = () => {
+      process.stdout.write("\x1b[?25h"); // show cursor
+      process.stdin.removeListener("data", onData);
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(false);
+      }
+      process.stdin.pause();
+    };
+
+    const onData = (data: Buffer) => {
+      const key = data.toString();
+
+      if (key === "\x03") {
+        // Ctrl+C
+        cleanup();
+        process.exit(0);
+      }
+
+      if (key === "\x1b[A") {
+        // Up arrow
+        selected = (selected - 1 + options.length) % options.length;
+        render();
+      } else if (key === "\x1b[B") {
+        // Down arrow
+        selected = (selected + 1) % options.length;
+        render();
+      } else if (key === "\r") {
+        // Enter
+        cleanup();
+        console.log(); // blank line after menu
+        resolve(options[selected].choice);
+      }
+    };
+
+    process.stdin.on("data", onData);
+  });
 }
 
 export function waitForExit(): void {
