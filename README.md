@@ -1,5 +1,9 @@
 # Nightreign Seamless-to-Steam
 
+## Description
+Simple NodeJs program that helps user to keep one single savegame between seamless and steam
+
+
 ## Commands
 ```bash
 # Start
