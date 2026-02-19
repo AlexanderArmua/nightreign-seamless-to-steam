@@ -143,5 +143,11 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
+# Bun
+bun.lockb
+
 # Exe
 *.exe
+
+# Test mode saves
+test-saves/
