@@ -1,6 +1,4 @@
-import readline from "readline";
-import type { ConversionChoice, ConversionResult, SaveDirectoryState } from "./types.js";
-import { SAVE_FORMATS } from "./config.js";
+import type { ConversionChoice, ConversionResult, ParsedArgs, SaveDirectoryState } from "./types.js";
 
 const COLORS = {
   reset: "\x1b[0m",
@@ -53,6 +51,7 @@ export function printConversionResult(result: ConversionResult): void {
 export async function promptConversionChoice(
   state: SaveDirectoryState
 ): Promise<ConversionChoice | null> {
+  const readline = await import("readline");
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -98,17 +97,21 @@ export async function promptConversionChoice(
 
 export function waitForExit(): void {
   info("\nPress any key to exit...");
-  process.stdin.setRawMode(true);
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+  }
   process.stdin.resume();
   process.stdin.once("data", () => process.exit(0));
 }
 
-export function parseArgs(argv: string[]): ConversionChoice | null {
+export function parseArgs(argv: string[]): ParsedArgs {
+  const testMode = argv.includes("--test");
+
   if (argv.includes("--to-steam")) {
-    return { from: "coop", to: "steam" };
+    return { choice: { from: "coop", to: "steam" }, testMode };
   }
   if (argv.includes("--to-coop")) {
-    return { from: "steam", to: "coop" };
+    return { choice: { from: "steam", to: "coop" }, testMode };
   }
-  return null;
+  return { choice: null, testMode };
 }

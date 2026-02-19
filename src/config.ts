@@ -14,7 +14,10 @@ export const BASE_SAVE_NAME = "NR0000";
 export function getNightreignDir(): string {
   const appData = process.env.APPDATA;
   if (!appData) {
-    throw new Error("APPDATA environment variable not set. Are you on Windows?");
+    throw new Error(
+      "APPDATA environment variable not found. This tool requires Windows. " +
+      "Use --test to run in test mode on other platforms."
+    );
   }
   return path.join(appData, "Nightreign");
 }

@@ -45,6 +45,14 @@ bun run dev -- --to-steam
 bun run dev -- --to-coop
 ```
 
+### Development mode
+
+```bash
+bun run dev -- --test
+bun run dev -- --test --to-steam
+bun run dev -- --test --to-coop
+```
+
 ## Pending work
 
 ### Automatization

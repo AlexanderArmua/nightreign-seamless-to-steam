@@ -148,3 +148,6 @@ bun.lockb
 
 # Exe
 *.exe
+
+# Test mode saves
+test-saves/

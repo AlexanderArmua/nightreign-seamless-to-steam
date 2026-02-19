@@ -1,4 +1,5 @@
 import { detectSaveDirectory } from "./saves.js";
+import { createTestEnvironment } from "./test-setup.js";
 import { createBackup } from "./backup.js";
 import { convert } from "./converter.js";
 import {
@@ -18,7 +19,11 @@ async function main(): Promise<void> {
   printBanner();
 
   try {
-    const state = await detectSaveDirectory();
+    const args = parseArgs(process.argv);
+    const state = args.testMode
+      ? await createTestEnvironment()
+      : await detectSaveDirectory();
+
     info(`[+] Save directory detected: ${state.steamIdFolder}\n`);
 
     // Back up current state before any changes
@@ -27,7 +32,7 @@ async function main(): Promise<void> {
     info(`[+] Backup of current state saved in: ${backupName}\n`);
 
     // Determine conversion choice: CLI args or interactive menu
-    let choice: ConversionChoice | null = parseArgs(process.argv);
+    let choice: ConversionChoice | null = args.choice;
 
     if (choice) {
       // Validate that the required source file exists

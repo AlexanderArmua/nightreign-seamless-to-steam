@@ -6,21 +6,21 @@ import type { SaveDirectoryState } from "./types.js";
 
 export async function detectSaveDirectory(): Promise<SaveDirectoryState> {
   const nightreignDir = getNightreignDir();
-
   await fs.access(nightreignDir);
 
   const items = await fs.readdir(nightreignDir, { withFileTypes: true });
-  const steamIdFolder = items.find(
+  const folder = items.find(
     (item) => item.isDirectory() && /^\d+$/.test(item.name)
   );
 
-  if (!steamIdFolder) {
+  if (!folder) {
     throw new SaveDirectoryNotFoundError(
       `Could not find any Steam ID folder (numbers) inside ${nightreignDir}`
     );
   }
 
-  const targetDir = path.join(nightreignDir, steamIdFolder.name);
+  const targetDir = path.join(nightreignDir, folder.name);
+  const steamIdFolder = folder.name;
   const files = await fs.readdir(targetDir);
 
   // TODO: An user can have multiple savegames, so we need to be able to identify `N4<number>` as the base save name.
@@ -33,7 +33,7 @@ export async function detectSaveDirectory(): Promise<SaveDirectoryState> {
 
   return {
     targetDir,
-    steamIdFolder: steamIdFolder.name,
+    steamIdFolder,
     hasSteamSave,
     hasCoopSave,
     files,

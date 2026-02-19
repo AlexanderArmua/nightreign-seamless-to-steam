@@ -25,6 +25,11 @@ export interface ConversionResult {
   toExt: string;
 }
 
+export interface ParsedArgs {
+  choice: ConversionChoice | null;
+  testMode: boolean;
+}
+
 export class SaveDirectoryNotFoundError extends Error {
   constructor(message: string) {
     super(message);
