@@ -10,7 +10,7 @@ import type {
   UninstallResult,
 } from "./types.js";
 
-const COLORS = {
+export const COLORS = {
   reset: "\x1b[0m",
   yellow: "\x1b[33m",
   red: "\x1b[31m",

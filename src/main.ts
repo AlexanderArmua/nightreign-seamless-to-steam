@@ -7,7 +7,6 @@ import { install, uninstall } from "./installer.js";
 import { detectMode, getLauncherContext } from "./mode.js";
 import { launchGame } from "./launcher.js";
 import {
-  printBanner,
   info,
   success,
   error,
@@ -21,6 +20,7 @@ import {
   waitForExit,
   parseArgs,
 } from "./cli.js";
+import { playBonfireIntro, cleanupBonfire } from "./bonfire.js";
 import type { ConversionChoice } from "./types.js";
 
 async function runCopySaves(testMode: boolean, preselectedChoice: ConversionChoice | null): Promise<void> {
@@ -194,7 +194,7 @@ async function runLauncherMode(): Promise<boolean> {
 }
 
 async function main(): Promise<void> {
-  printBanner();
+  playBonfireIntro();
 
   let launchedGame = false;
 
@@ -215,6 +215,7 @@ async function main(): Promise<void> {
       error("\n[X] An unexpected error occurred: " + (e.message ?? String(e)));
     }
   } finally {
+    cleanupBonfire();
     if (launchedGame) {
       // Game was launched — exit immediately so the window closes
       process.exit(0);
