@@ -1,11 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
-import { BASE_SAVE_NAME, SAVE_FORMATS } from "./config.js";
+import { BASE_SAVE_NAME, SAVE_FORMATS, ORIGINAL_LAUNCHER_NAME, SEAMLESS_COOP_LAUNCHER_NAME } from "./config.js";
 import { info, success } from "./cli.js";
 import type { SaveDirectoryState } from "./types.js";
 
 const MOCK_STEAM_ID = "123456789";
 const TEST_DIR_NAME = "test-saves";
+const TEST_GAME_DIR_NAME = "test-game";
 
 export async function createTestEnvironment(): Promise<SaveDirectoryState> {
   const testDir = path.join(process.cwd(), TEST_DIR_NAME, MOCK_STEAM_ID);
@@ -50,4 +51,37 @@ export async function createTestEnvironment(): Promise<SaveDirectoryState> {
     hasCoopSave,
     files,
   };
+}
+
+export async function createTestGameDirectory(): Promise<string> {
+  const testGameDir = path.join(process.cwd(), TEST_GAME_DIR_NAME);
+
+  await fs.mkdir(testGameDir, { recursive: true });
+
+  const originalLauncherPath = path.join(testGameDir, ORIGINAL_LAUNCHER_NAME);
+  const seamlessCoopPath = path.join(testGameDir, SEAMLESS_COOP_LAUNCHER_NAME);
+
+  let createdFiles = false;
+
+  try {
+    await fs.access(originalLauncherPath);
+  } catch {
+    await fs.writeFile(originalLauncherPath, "mock-original-launcher");
+    createdFiles = true;
+  }
+
+  try {
+    await fs.access(seamlessCoopPath);
+  } catch {
+    await fs.writeFile(seamlessCoopPath, "mock-seamless-coop-launcher");
+    createdFiles = true;
+  }
+
+  if (createdFiles) {
+    success(`[+] Created test game directory in ./${TEST_GAME_DIR_NAME}/`);
+  } else {
+    info(`[+] Using existing test game directory in ./${TEST_GAME_DIR_NAME}/`);
+  }
+
+  return testGameDir;
 }

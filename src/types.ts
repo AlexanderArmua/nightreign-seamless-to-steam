@@ -43,3 +43,36 @@ export class NoSaveFilesError extends Error {
     this.name = "NoSaveFilesError";
   }
 }
+
+export interface MenuItem<T> {
+  label: string;
+  value: T;
+}
+
+export type AppMode = "standalone" | "launcher";
+
+export type StandaloneMenuChoice = "copy_saves" | "install" | "uninstall";
+
+export type LauncherMenuChoice = "classic" | "seamless_coop";
+
+export interface LauncherContext {
+  gameDir: string;
+  originalLauncherPath: string;
+  seamlessCoopLauncherPath: string;
+  hasSeamlessCoop: boolean;
+}
+
+export interface InstallResult {
+  success: boolean;
+  gameDirPath: string;
+  originalRenamed: boolean;
+  exeCopied: boolean;
+  seamlessCoopDetected: boolean;
+}
+
+export interface UninstallResult {
+  success: boolean;
+  gameDirPath: string;
+  replacementDeleted: boolean;
+  originalRestored: boolean;
+}
