@@ -2,52 +2,61 @@ import { COLORS } from "./cli.js";
 
 const C = COLORS;
 
-// Lower half: crossguard, narrowing flames + handle, and base (static across all frames)
-const LOWER_HALF = [
-  `${C.brightRed}      ⠻⣿${C.white}⠤⣤⣼⣧⣤⠤${C.brightRed}⣿⠟`,
-  `${C.red}        ⠻${C.yellow}⣿${C.white}⢸⡇${C.yellow}⣿${C.red}⠟`,
-  `${C.red}        ⠈${C.yellow}⣿${C.white}⢸⡇${C.yellow}⣿${C.red}⠁`,
+// Sword blade and crossguard above the flames (static)
+const SWORD_TOP = [
   `${C.white}          ⢸⡇`,
-  `${C.gray}        ⣀⣤⣸⣇⣤⣀`,
-  `${C.gray}       ⣼⣿⣿⣿⣿⣿⣧`,
-  `${C.gray}       ⠿⣿⣿⣿⣿⣿⠿`,
-  `${C.yellow}        ⠈⠉⠉⠉⠉⠁${C.reset}`,
+  `${C.white}          ⢸⡇`,
+  `${C.white}        ⠤⣤⣼⣧⣤⠤`,
 ].join("\n");
 
-const FLAME_1 = `${C.brightYellow}            ⡀
-${C.yellow}         ⢀⣾${C.brightYellow}⣿⣿${C.yellow}⣧⡀
-${C.red}        ⣠${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.red}⣄
-${C.red}       ⣴${C.brightRed}⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣦
-${C.red}      ⣼${C.brightRed}⣿⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿⣿${C.red}⣧
-${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿
-${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿
-${C.red}      ⢿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⡿
-${LOWER_HALF}`;
+// Wide/widest flame body around the handle (static)
+const FLAME_BODY = [
+  `${C.red}      ⣼${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣧`,
+  `${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿`,
+  `${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿`,
+].join("\n");
 
-const FLAME_2 = `${C.brightYellow}           ⣀⡀
-${C.yellow}         ⣰${C.brightYellow}⣿⣿${C.yellow}⣿⣆
-${C.red}       ⢀${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.red}⡀
-${C.red}      ⢠${C.brightRed}⣿⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⡄
-${C.red}      ⣾${C.brightRed}⣿⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿⣿${C.red}⣷
-${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿
-${C.red}      ⢿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⡿
-${C.red}      ⠘${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⠃
-${LOWER_HALF}`;
+// Log pile base (static)
+const BASE = [
+  `${C.gray}    ⣀⠝⡛⢁⡴⢉⠗⠛⢰⣶⣯⢠⠺ ⠈⢥⠰⡀`,
+  `${C.gray} ⣠⣴⢿⣿⡟⠷⠶⣶⣵⣲⡀⣨⣿⣆⡬⠖⢛⣶⣼⡗⠈⠢`,
+  `${C.gray}⢰⣹⠭⠽⢧⠅⢂⣳⠛⢿⡽⣿⢿⡿⢟⣟⡻⢾⣿⣿⡤⢴⣶⡃${C.reset}`,
+].join("\n");
 
-const FLAME_3 = `${C.brightYellow}          ⡀
-${C.yellow}        ⢀⣾${C.brightYellow}⣿⣿${C.yellow}⣷
-${C.red}       ⣠${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.red}⣤
-${C.red}      ⢠${C.brightRed}⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿⣿${C.red}⡄
-${C.red}     ⢀${C.brightRed}⣿⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿⣿${C.red}⣿⡀
-${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿
-${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⡿
+// Frame 1: flames lean slightly right
+const FLAME_1 = `${SWORD_TOP}
+${C.brightYellow}         ⠈${C.white}⢸⡇${C.brightYellow}⡀
+${C.yellow}         ⣾${C.white}⢸⡇${C.yellow}⣷⡀
+${C.yellow}        ⣾${C.brightYellow}⣿${C.white}⢸⡇${C.brightYellow}⣿${C.yellow}⣿⡄
+${C.red}       ⣴${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.red}⣿⣦
+${FLAME_BODY}
+${C.red}      ⢿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⡿
+${BASE}`;
+
+// Frame 2: flames centered, symmetrical
+const FLAME_2 = `${SWORD_TOP}
+${C.brightYellow}         ⡀${C.white}⢸⡇${C.brightYellow}⠁
+${C.yellow}         ⣿${C.white}⢸⡇${C.yellow}⣿
+${C.yellow}       ⢀⣿${C.brightYellow}⣿${C.white}⢸⡇${C.brightYellow}⣿${C.yellow}⣿⡀
+${C.red}       ⣼${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.red}⣧
+${FLAME_BODY}
+${C.red}      ⠻${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⠟
+${BASE}`;
+
+// Frame 3: flames lean slightly left
+const FLAME_3 = `${SWORD_TOP}
+${C.brightYellow}        ⡀⠈${C.white}⢸⡇
+${C.yellow}        ⢀⣷${C.white}⢸⡇${C.yellow}⣧
+${C.yellow}       ⣠⣿${C.brightYellow}⣿${C.white}⢸⡇${C.brightYellow}⣿${C.yellow}⣷
+${C.red}      ⣴⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.red}⣦
+${FLAME_BODY}
 ${C.red}      ⠸${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⠇
-${LOWER_HALF}`;
+${BASE}`;
 
 const FRAMES = [FLAME_1, FLAME_2, FLAME_3];
 
 // Each frame is this many lines tall
-const FRAME_HEIGHT = 16;
+const FRAME_HEIGHT = 14;
 
 // 1 blank line for top padding (no banner)
 const BANNER_HEIGHT = 1;
