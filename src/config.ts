@@ -8,6 +8,10 @@ export const SAVE_FORMATS: Record<SaveFormat, SaveFormatInfo> = {
 
 export const PROTECTED_FILES = ["steam_autocloud.vdf"];
 
+export const ORIGINAL_LAUNCHER_NAME = "start_protected_game.exe";
+export const BACKUP_LAUNCHER_NAME = "start_protected_game_original.exe";
+export const SEAMLESS_COOP_LAUNCHER_NAME = "NRSC_launcher.exe";
+
 // TODO: An user can have multiple savegames, so we need to be able to identify `N4<number>` as the base save name.
 export const BASE_SAVE_NAME = "NR0000";
 
