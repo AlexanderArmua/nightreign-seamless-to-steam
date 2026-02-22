@@ -4,10 +4,12 @@ import type {
   InstallResult,
   LauncherMenuChoice,
   MenuItem,
+  ModInstallResult,
   ParsedArgs,
   SaveDirectoryState,
   StandaloneMenuChoice,
   UninstallResult,
+  ZipCandidate,
 } from "./types.js";
 
 export const COLORS = {
@@ -166,6 +168,7 @@ export async function promptStandaloneMenu(): Promise<StandaloneMenuChoice | nul
     { label: "Copy savegames (convert between Steam/Coop)", value: "copy_saves" },
     { label: "Install Save Manager as game launcher", value: "install" },
     { label: "Uninstall Save Manager from game launcher", value: "uninstall" },
+    { label: "Download & Install Seamless Co-op", value: "download_coop" },
   ];
 
   return promptMenu("What would you like to do? (↑/↓ to move, Enter to confirm):", options);
@@ -247,6 +250,77 @@ export function printUninstallResult(result: UninstallResult): void {
     } else if (!result.originalRestored) {
       error("    Could not restore the original launcher from backup.");
       warning("    You may need to verify game files through Steam.");
+    }
+  }
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatRelativeTime(date: Date): string {
+  const diffMs = Date.now() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return `${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  return `${diffHr}h ago`;
+}
+
+export async function promptZipSelection(candidates: ZipCandidate[]): Promise<ZipCandidate | null> {
+  const options: MenuItem<ZipCandidate | null>[] = candidates.map((c) => ({
+    label: `${c.fileName} (${formatFileSize(c.sizeBytes)}, ${formatRelativeTime(c.modifiedTime)})`,
+    value: c,
+  }));
+
+  options.push({
+    label: "Browse manually...",
+    value: null,
+  });
+
+  return promptMenu("Select the downloaded zip file (↑/↓ to move, Enter to confirm):", options);
+}
+
+export async function promptPressAnyKey(message: string): Promise<void> {
+  info(message);
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+  }
+  process.stdin.resume();
+
+  return new Promise<void>((resolve) => {
+    process.stdin.once("data", (data: Buffer) => {
+      const key = data.toString();
+      if (key === "\x03") {
+        // Ctrl+C
+        process.exit(0);
+      }
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(false);
+      }
+      process.stdin.pause();
+      resolve();
+    });
+  });
+}
+
+export function printModInstallResult(result: ModInstallResult): void {
+  if (result.success) {
+    success("\n[+] Seamless Co-op installed successfully!");
+    info(`    Game directory: ${result.gameDir}`);
+    info(`    Zip file: ${result.zipPath}`);
+    if (result.launcherFound) {
+      success("    [+] NRSC_launcher.exe found — mod is ready to use");
+    } else {
+      warning("    [!] NRSC_launcher.exe not found — the zip may not contain the expected mod files");
+    }
+  } else {
+    error("\n[!] Seamless Co-op installation failed.");
+    if (result.error) {
+      error(`    ${result.error}`);
     }
   }
 }

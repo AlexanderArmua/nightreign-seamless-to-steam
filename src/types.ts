@@ -51,7 +51,7 @@ export interface MenuItem<T> {
 
 export type AppMode = "standalone" | "launcher";
 
-export type StandaloneMenuChoice = "copy_saves" | "install" | "uninstall";
+export type StandaloneMenuChoice = "copy_saves" | "install" | "uninstall" | "download_coop";
 
 export type LauncherMenuChoice = "classic" | "seamless_coop";
 
@@ -75,4 +75,24 @@ export interface UninstallResult {
   gameDirPath: string;
   replacementDeleted: boolean;
   originalRestored: boolean;
+}
+
+export interface ZipCandidate {
+  fileName: string;
+  fullPath: string;
+  modifiedTime: Date;
+  sizeBytes: number;
+}
+
+export interface ModInstallResult {
+  success: boolean;
+  zipPath: string;
+  gameDir: string;
+  launcherFound: boolean;
+  error?: string;
+}
+
+export interface GameDirDetectionResult {
+  found: boolean;
+  path: string | null;
 }

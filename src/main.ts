@@ -10,16 +10,30 @@ import {
   info,
   success,
   error,
+  warning,
   promptConversionChoice,
   promptStandaloneMenu,
   promptLauncherMenu,
   promptDirectoryInput,
+  promptZipSelection,
+  promptPressAnyKey,
   printConversionResult,
   printInstallResult,
   printUninstallResult,
+  printModInstallResult,
   waitForExit,
   parseArgs,
 } from "./cli.js";
+import {
+  openUrl,
+  getDownloadsFolder,
+  scanForZipFiles,
+  detectGameDirectory,
+  installMod,
+  openFilePicker,
+  openFolderPicker,
+} from "./downloader.js";
+import { NEXUS_MODS_URL } from "./config.js";
 import { playBonfireIntro, cleanupBonfire } from "./bonfire.js";
 import type { ConversionChoice } from "./types.js";
 
@@ -64,9 +78,14 @@ async function runInstall(testMode: boolean): Promise<void> {
   if (testMode) {
     gameDir = await createTestGameDirectory();
   } else {
-    const input = await promptDirectoryInput(
-      "Enter the Nightreign game directory path\n(e.g. C:\\Program Files (x86)\\Steam\\steamapps\\common\\ELDEN RING NIGHTREIGN):"
-    );
+    info("[+] Select the Nightreign game directory...\n");
+    let input = openFolderPicker();
+
+    if (!input) {
+      input = await promptDirectoryInput(
+        "Enter the Nightreign game directory path\n(e.g. C:\\Program Files (x86)\\Steam\\steamapps\\common\\ELDEN RING NIGHTREIGN):"
+      );
+    }
 
     if (!input) {
       error("[!] No directory provided.");
@@ -98,9 +117,14 @@ async function runUninstall(testMode: boolean): Promise<void> {
   if (testMode) {
     gameDir = await createTestGameDirectory();
   } else {
-    const input = await promptDirectoryInput(
-      "Enter the Nightreign game directory path\n(e.g. C:\\Program Files (x86)\\Steam\\steamapps\\common\\ELDEN RING NIGHTREIGN):"
-    );
+    info("[+] Select the Nightreign game directory...\n");
+    let input = openFolderPicker();
+
+    if (!input) {
+      input = await promptDirectoryInput(
+        "Enter the Nightreign game directory path\n(e.g. C:\\Program Files (x86)\\Steam\\steamapps\\common\\ELDEN RING NIGHTREIGN):"
+      );
+    }
 
     if (!input) {
       error("[!] No directory provided.");
@@ -125,6 +149,120 @@ async function runUninstall(testMode: boolean): Promise<void> {
   printUninstallResult(result);
 }
 
+async function runDownloadCoop(testMode: boolean): Promise<void> {
+  // 1. Open NexusMods page
+  info("[+] Opening NexusMods page for Seamless Co-op...\n");
+  const opened = openUrl(NEXUS_MODS_URL);
+  if (opened) {
+    info(`    URL: ${NEXUS_MODS_URL}`);
+  } else {
+    warning("[!] Could not open browser. Please visit this URL manually:");
+    info(`    ${NEXUS_MODS_URL}`);
+  }
+
+  // 2. Wait for user to download
+  await promptPressAnyKey("\nPress any key after downloading the mod zip file...");
+
+  // 3. Auto-find zip in Downloads folder
+  let zipPath: string | null = null;
+  const downloadsFolder = getDownloadsFolder();
+
+  let hasDownloadCandidates = false;
+
+  if (downloadsFolder) {
+    const candidates = await scanForZipFiles(downloadsFolder);
+
+    if (candidates.length > 0) {
+      hasDownloadCandidates = true;
+      info(`\n[+] Found ${candidates.length} recent zip file(s) in Downloads:\n`);
+      const selected = await promptZipSelection(candidates);
+      if (selected) {
+        zipPath = selected.fullPath;
+      }
+    }
+  }
+
+  if (!zipPath) {
+    if (!hasDownloadCandidates) {
+      info("\n[!] No zip files found in Downloads folder.");
+    }
+    info("[+] Select the downloaded Seamless-Coop .zip file to install\n");
+    let input = openFilePicker("Zip files (*.zip)|*.zip");
+
+    if (!input) {
+      input = await promptDirectoryInput(
+        "Enter the full path to the downloaded zip file:"
+      );
+    }
+
+    if (!input) {
+      error("[!] No path provided.");
+      return;
+    }
+
+    try {
+      const stat = await fs.stat(input);
+      if (!stat.isFile()) {
+        error("[!] The provided path is not a file.");
+        return;
+      }
+    } catch {
+      error("[!] File not found. Please check the path and try again.");
+      return;
+    }
+
+    zipPath = input;
+  }
+
+  // 4. Auto-find game directory
+  let gameDir: string;
+
+  if (testMode) {
+    gameDir = await createTestGameDirectory();
+  } else {
+    info("\n[+] Detecting game directory...");
+    const detection = await detectGameDirectory();
+
+    if (detection.found && detection.path) {
+      gameDir = detection.path;
+      info(`[+] Found game directory: ${gameDir}\n`);
+    } else {
+      warning("[!] Could not auto-detect game directory.");
+      info("[+] Opening folder picker...\n");
+      let input = openFolderPicker();
+
+      if (!input) {
+        input = await promptDirectoryInput(
+          "Enter the Nightreign game directory path\n(e.g. C:\\Program Files (x86)\\Steam\\steamapps\\common\\ELDEN RING NIGHTREIGN\\Game):"
+        );
+      }
+
+      if (!input) {
+        error("[!] No directory provided.");
+        return;
+      }
+
+      try {
+        const stat = await fs.stat(input);
+        if (!stat.isDirectory()) {
+          error("[!] The provided path is not a directory.");
+          return;
+        }
+      } catch {
+        error("[!] Directory not found. Please check the path and try again.");
+        return;
+      }
+
+      gameDir = input;
+    }
+  }
+
+  // 5. Install the mod
+  info("[+] Installing Seamless Co-op...\n");
+  const result = await installMod(zipPath, gameDir);
+  printModInstallResult(result);
+}
+
 async function runStandaloneMode(testMode: boolean, cliChoice: ConversionChoice | null): Promise<void> {
   // If CLI args provided, go directly to copy saves (backward compat)
   if (cliChoice) {
@@ -144,6 +282,9 @@ async function runStandaloneMode(testMode: boolean, cliChoice: ConversionChoice 
       break;
     case "uninstall":
       await runUninstall(testMode);
+      break;
+    case "download_coop":
+      await runDownloadCoop(testMode);
       break;
   }
 }
