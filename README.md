@@ -1,5 +1,22 @@
 # Nightreign Seamless-to-Steam
 
+```bash
+          ⢸⡇
+          ⢸⡇
+        ⠤⣤⣼⣧⣤⠤
+        ⡀⠈⢸⡇
+        ⢀⣷⢸⡇⣧
+       ⣠⣿⣿⢸⡇⣿⣷⡀
+      ⣴⣿⣿⣿⢸⡇⣿⣿⣿⣦
+     ⣾⣿⣿⣿⣿⢸⡇⣿⣿⣿⣿⣷
+     ⣿⣿⣿⣿⣿⢸⡇⣿⣿⣿⣿⣿
+     ⣿⣿⣿⣿⣿⢸⡇⣿⣿⣿⣿⣿
+     ⠸⣿⣿⣿⣿⢸⡇⣿⣿⣿⣿⠇
+    ⣀⠝⡛⢁⡴⢉⠗⠛⢰⣶⣯⢠⠺ ⠈⢥⠰⡀
+ ⣠⣴⢿⣿⡟⠷⠶⣶⣵⣲⡀⣨⣿⣆⡬⠖⢛⣶⣼⡗⠈⠢
+⢰⣹⠭⠽⢧⠅⢂⣳⠛⢿⡽⣿⢿⡿⢟⣟⡻⢾⣿⣿⡤⢴⣶⡃
+```
+
 ## Description
 
 Simple CLI tool that helps users keep one single savegame between SeamlessCoop and Steam for Elden Ring Nightreign.
@@ -92,3 +109,7 @@ Also the modal offers to open the savegame folder so the user can backup manuall
 The user can rollback to any version, or even maintain multiple savegames.
 The system reads the savegame metadata to display useful information like name, characters and played hours.
 Users can download savegames from other players and implement it easily.
+
+### Logo image
+
+Image copied from <https://www.deviantart.com/fathomir/art/Dark-Souls-Bonfire-Pixeled-594782264>
