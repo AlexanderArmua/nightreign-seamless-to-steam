@@ -1,54 +1,56 @@
-import { COLORS, printBanner } from "./cli.js";
+import { COLORS } from "./cli.js";
 
-const FLAME_1 = `${COLORS.yellow}       )  ${COLORS.red}  (
-${COLORS.red}      (  ${COLORS.yellow} )  )
-${COLORS.yellow}       )${COLORS.red}(${COLORS.yellow})${COLORS.red}(${COLORS.yellow})
-${COLORS.red}      (${COLORS.yellow}(${COLORS.red}(${COLORS.yellow})${COLORS.red})${COLORS.yellow})
-${COLORS.yellow}       )${COLORS.red}(${COLORS.yellow}(${COLORS.red})${COLORS.yellow})
-${COLORS.red}        )${COLORS.yellow}(${COLORS.red})
-${COLORS.white}        |||
-        |||
-       /|||\\
-      / ||| \\
-     /  |||  \\
-    /____|____\\
-${COLORS.yellow}  ~~~~~~~~~~~~~~~   ${COLORS.reset}`;
+const C = COLORS;
 
-const FLAME_2 = `${COLORS.red}      (   ${COLORS.yellow} )
-${COLORS.yellow}       ) ${COLORS.red} (  )
-${COLORS.red}      (${COLORS.yellow})${COLORS.red}(${COLORS.yellow})(${COLORS.red})
-${COLORS.yellow}       (${COLORS.red}(${COLORS.yellow})${COLORS.red}(${COLORS.yellow}))
-${COLORS.red}      (${COLORS.yellow})(${COLORS.red}(${COLORS.yellow})${COLORS.red})(
-${COLORS.yellow}        (${COLORS.red})${COLORS.yellow})
-${COLORS.white}        |||
-        |||
-       /|||\\
-      / ||| \\
-     /  |||  \\
-    /____|____\\
-${COLORS.yellow}  ~~~~~~~~~~~~~~~   ${COLORS.reset}`;
+// Lower half: crossguard, narrowing flames + handle, and base (static across all frames)
+const LOWER_HALF = [
+  `${C.brightRed}      ⠻⣿${C.white}⠤⣤⣼⣧⣤⠤${C.brightRed}⣿⠟`,
+  `${C.red}        ⠻${C.yellow}⣿${C.white}⢸⡇${C.yellow}⣿${C.red}⠟`,
+  `${C.red}        ⠈${C.yellow}⣿${C.white}⢸⡇${C.yellow}⣿${C.red}⠁`,
+  `${C.white}          ⢸⡇`,
+  `${C.gray}        ⣀⣤⣸⣇⣤⣀`,
+  `${C.gray}       ⣼⣿⣿⣿⣿⣿⣧`,
+  `${C.gray}       ⠿⣿⣿⣿⣿⣿⠿`,
+  `${C.yellow}        ⠈⠉⠉⠉⠉⠁${C.reset}`,
+].join("\n");
 
-const FLAME_3 = `${COLORS.yellow}       (  ${COLORS.red} )
-${COLORS.red}      ) ${COLORS.yellow} (${COLORS.red})
-${COLORS.yellow}      (${COLORS.red})(${COLORS.yellow})(${COLORS.red})(
-${COLORS.red}      (${COLORS.yellow})(${COLORS.red}(${COLORS.yellow})(${COLORS.red})
-${COLORS.yellow}       (${COLORS.red}(${COLORS.yellow})${COLORS.red}(${COLORS.yellow})
-${COLORS.red}       )${COLORS.yellow}(${COLORS.red})(
-${COLORS.white}        |||
-        |||
-       /|||\\
-      / ||| \\
-     /  |||  \\
-    /____|____\\
-${COLORS.yellow}  ~~~~~~~~~~~~~~~   ${COLORS.reset}`;
+const FLAME_1 = `${C.brightYellow}            ⡀
+${C.yellow}         ⢀⣾${C.brightYellow}⣿⣿${C.yellow}⣧⡀
+${C.red}        ⣠${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.red}⣄
+${C.red}       ⣴${C.brightRed}⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣦
+${C.red}      ⣼${C.brightRed}⣿⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿⣿${C.red}⣧
+${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿
+${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿
+${C.red}      ⢿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⡿
+${LOWER_HALF}`;
+
+const FLAME_2 = `${C.brightYellow}           ⣀⡀
+${C.yellow}         ⣰${C.brightYellow}⣿⣿${C.yellow}⣿⣆
+${C.red}       ⢀${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.red}⡀
+${C.red}      ⢠${C.brightRed}⣿⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⡄
+${C.red}      ⣾${C.brightRed}⣿⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿⣿${C.red}⣷
+${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿
+${C.red}      ⢿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⡿
+${C.red}      ⠘${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⠃
+${LOWER_HALF}`;
+
+const FLAME_3 = `${C.brightYellow}          ⡀
+${C.yellow}        ⢀⣾${C.brightYellow}⣿⣿${C.yellow}⣷
+${C.red}       ⣠${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.red}⣤
+${C.red}      ⢠${C.brightRed}⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿⣿${C.red}⡄
+${C.red}     ⢀${C.brightRed}⣿⣿${C.yellow}⣿⣿${C.brightYellow}⣿⣿${C.yellow}⣿⣿${C.brightRed}⣿⣿${C.red}⣿⡀
+${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿
+${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⡿
+${C.red}      ⠸${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⠇
+${LOWER_HALF}`;
 
 const FRAMES = [FLAME_1, FLAME_2, FLAME_3];
 
 // Each frame is this many lines tall
-const FRAME_HEIGHT = 13;
+const FRAME_HEIGHT = 16;
 
-// Banner is 3 lines + 1 blank line = 4 lines before bonfire
-const BANNER_HEIGHT = 4;
+// 1 blank line for top padding (no banner)
+const BANNER_HEIGHT = 1;
 
 let animationInterval: ReturnType<typeof setInterval> | null = null;
 let frameIndex = 0;
@@ -92,10 +94,7 @@ export function playBonfireIntro(): void {
   // Clear screen and move cursor to top-left
   process.stdout.write("\x1b[2J\x1b[H");
 
-  // Print banner (3 lines)
-  printBanner();
-
-  // Blank line after banner
+  // Top padding
   console.log();
 
   // Bonfire starts at row BANNER_HEIGHT + 1 (1-indexed)

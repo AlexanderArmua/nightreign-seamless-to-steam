@@ -16,6 +16,9 @@ export const COLORS = {
   red: "\x1b[31m",
   green: "\x1b[32m",
   white: "\x1b[37m",
+  brightYellow: "\x1b[93m",
+  brightRed: "\x1b[91m",
+  gray: "\x1b[90m",
 } as const;
 
 export function success(msg: string): void {
