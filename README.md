@@ -79,18 +79,6 @@ bun run dev -- --test --to-coop
 3. If the user executes Steam's softlink, it should copy from co2 to sl2
 4. If the user executes Seamless' softlink, it should copy from sl2 to co2
 
-### Notifications
-
-1. Integrate with Windows notification system
-
-## UI
-
-1. Implement UI with buttons if the user opens the program directly
-
-## UI - Icons
-
-1. Add icons
-
 ## Alternative to Automatization
 
 1. Instead of creating two different launchers to the user, modify only Steam's launcher
@@ -113,3 +101,7 @@ Users can download savegames from other players and implement it easily.
 ### Logo image
 
 Image copied from <https://www.deviantart.com/fathomir/art/Dark-Souls-Bonfire-Pixeled-594782264>
+
+### Seamless coop
+
+Link to mod to play with more than 3 persons <https://www.nexusmods.com/eldenringnightreign/mods/3>
