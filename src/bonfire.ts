@@ -9,13 +9,6 @@ const SWORD_TOP = [
   `${C.white}        ⠤⣤⣼⣧⣤⠤`,
 ].join("\n");
 
-// Wide/widest flame body around the handle (static)
-const FLAME_BODY = [
-  `${C.red}      ⣼${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣧`,
-  `${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿`,
-  `${C.red}      ⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿`,
-].join("\n");
-
 // Log pile base (static)
 const BASE = [
   `${C.gray}    ⣀⠝⡛⢁⡴⢉⠗⠛⢰⣶⣯⢠⠺ ⠈⢥⠰⡀`,
@@ -27,10 +20,12 @@ const BASE = [
 const FLAME_1 = `${SWORD_TOP}
 ${C.brightYellow}         ⠈${C.white}⢸⡇${C.brightYellow}⡀
 ${C.yellow}         ⣾${C.white}⢸⡇${C.yellow}⣷⡀
-${C.yellow}        ⣾${C.brightYellow}⣿${C.white}⢸⡇${C.brightYellow}⣿${C.yellow}⣿⡄
-${C.red}       ⣴${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.red}⣿⣦
-${FLAME_BODY}
-${C.red}      ⢿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⡿
+${C.yellow}       ⢀⣾${C.brightYellow}⣿${C.white}⢸⡇${C.brightYellow}⣿${C.yellow}⣿⣄
+${C.red}      ⣴${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.red}⣦
+${C.red}     ⣼${C.brightRed}⣿${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.brightRed}⣿${C.red}⣧
+${C.red}     ⣿${C.brightRed}⣿${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.brightRed}⣿${C.red}⣿
+${C.red}     ⣿${C.brightRed}⣿${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.brightRed}⣿${C.red}⣿
+${C.red}     ⢿${C.brightRed}⣿${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.brightRed}⣿${C.red}⡿
 ${BASE}`;
 
 // Frame 2: flames centered, symmetrical
@@ -38,19 +33,23 @@ const FLAME_2 = `${SWORD_TOP}
 ${C.brightYellow}         ⡀${C.white}⢸⡇${C.brightYellow}⠁
 ${C.yellow}         ⣿${C.white}⢸⡇${C.yellow}⣿
 ${C.yellow}       ⢀⣿${C.brightYellow}⣿${C.white}⢸⡇${C.brightYellow}⣿${C.yellow}⣿⡀
-${C.red}       ⣼${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.red}⣧
-${FLAME_BODY}
-${C.red}      ⠻${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⠟
+${C.red}      ⣼${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.red}⣧
+${C.red}     ⣾${C.brightRed}⣿${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.brightRed}⣿${C.red}⣷
+${C.red}     ⣿${C.brightRed}⣿⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿⣿${C.red}⣿
+${C.red}     ⢿${C.brightRed}⣿${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.brightRed}⣿${C.red}⡿
+${C.red}     ⠻${C.brightRed}⣿${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.brightRed}⣿${C.red}⠟
 ${BASE}`;
 
 // Frame 3: flames lean slightly left
 const FLAME_3 = `${SWORD_TOP}
 ${C.brightYellow}        ⡀⠈${C.white}⢸⡇
 ${C.yellow}        ⢀⣷${C.white}⢸⡇${C.yellow}⣧
-${C.yellow}       ⣠⣿${C.brightYellow}⣿${C.white}⢸⡇${C.brightYellow}⣿${C.yellow}⣷
-${C.red}      ⣴⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.red}⣦
-${FLAME_BODY}
-${C.red}      ⠸${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⠇
+${C.yellow}       ⣠⣿${C.brightYellow}⣿${C.white}⢸⡇${C.brightYellow}⣿${C.yellow}⣷⡀
+${C.red}      ⣴⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.red}⣿⣦
+${C.red}     ⣾⣿${C.brightRed}⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿${C.red}⣿⣷
+${C.red}     ⣿${C.brightRed}⣿${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.brightRed}⣿${C.red}⣿
+${C.red}     ⣿${C.brightRed}⣿⣿${C.yellow}⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿${C.brightRed}⣿⣿${C.red}⣿
+${C.red}     ⠸${C.brightRed}⣿${C.yellow}⣿⣿⣿${C.white}⢸⡇${C.yellow}⣿⣿⣿${C.brightRed}⣿${C.red}⠇
 ${BASE}`;
 
 const FRAMES = [FLAME_1, FLAME_2, FLAME_3];
@@ -100,6 +99,15 @@ export function stopBonfireAnimation(): void {
 }
 
 export function playBonfireIntro(): void {
+  // Ensure terminal state is always restored, even if process.exit() is called
+  // (e.g. Ctrl+C in menu bypasses the finally block in main)
+  process.on("exit", () => {
+    stopBonfireAnimation();
+    process.stdout.write("\x1b[r");      // reset scroll region
+    process.stdout.write("\x1b[?25h");   // show cursor
+    process.stdout.write("\x1b[0m");     // reset colors
+  });
+
   // Clear screen and move cursor to top-left
   process.stdout.write("\x1b[2J\x1b[H");
 
