@@ -7,15 +7,19 @@
   "author": "Alexander Armua <alexanderarmua1@gmail.com>",
   "type": "module",
   "scripts": {
-    "dev": "bun run src/main.ts",
+    "dev": "npx tsx src/main.ts",
     "check": "tsc --noEmit",
-    "build": "bun build --compile src/main.ts --target=bun-windows-x64 --windows-icon=./public/bonfire.ico --outfile SaveManager.exe",
-    "build:windows": "bun build --compile src/main.ts --target=bun-windows-x64 --windows-icon=./public/bonfire.ico --outfile SaveManager.exe",
-    "build:mac": "bun build --compile src/main.ts --target=bun-darwin-arm64 --outfile SaveManager-mac",
-    "build:linux": "bun build --compile src/main.ts --target=bun-linux-x64 --outfile SaveManager-linux"
+    "bundle": "esbuild src/main.ts --bundle --platform=node --format=cjs --minify --outfile=dist/main.cjs",
+    "build": "npm run bundle && pkg dist/main.cjs --targets node20-win-x64 --output SaveManager.exe",
+    "build:windows": "npm run bundle && pkg dist/main.cjs --targets node20-win-x64 --output SaveManager.exe",
+    "build:mac": "npm run bundle && pkg dist/main.cjs --targets node20-macos-arm64 --output SaveManager-mac",
+    "build:linux": "npm run bundle && pkg dist/main.cjs --targets node20-linux-x64 --output SaveManager-linux"
   },
   "devDependencies": {
-    "bun-types": "latest",
+    "@types/node": "^22",
+    "esbuild": "^0.24",
+    "@yao-pkg/pkg": "^6",
+    "tsx": "^4",
     "typescript": "^5.7"
   },
   "keywords": [
