@@ -1,5 +1,7 @@
 # Nightreign Seamless-to-Steam
 
+![Dark Souls Bonfire](https://github.com/AlexanderArmua/nightreign-seamless-to-steam/blob/main/public/bonfire.jpg)
+
 ```bash
           ⢸⡇
           ⢸⡇
