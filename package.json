@@ -13,14 +13,18 @@
     "build": "npm run bundle && pkg dist/main.cjs --targets node20-win-x64 --output SaveManager.exe",
     "build:windows": "npm run bundle && pkg dist/main.cjs --targets node20-win-x64 --output SaveManager.exe",
     "build:mac": "npm run bundle && pkg dist/main.cjs --targets node20-macos-arm64 --output SaveManager-mac",
-    "build:linux": "npm run bundle && pkg dist/main.cjs --targets node20-linux-x64 --output SaveManager-linux"
+    "build:linux": "npm run bundle && pkg dist/main.cjs --targets node20-linux-x64 --output SaveManager-linux",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@types/node": "^22",
-    "esbuild": "^0.24",
+    "@vitest/coverage-v8": "4.0.18",
     "@yao-pkg/pkg": "^6",
+    "esbuild": "^0.24",
     "tsx": "^4",
-    "typescript": "^5.7"
+    "typescript": "^5.7",
+    "vitest": "^4.0.18"
   },
   "keywords": [
     "nightreign",

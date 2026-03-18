@@ -286,6 +286,8 @@ async function runStandaloneMode(testMode: boolean, cliChoice: ConversionChoice 
     case "download_coop":
       await runDownloadCoop(testMode);
       break;
+    case "exit":
+      process.exit(0);
   }
 }
 
@@ -298,6 +300,12 @@ async function runLauncherMode(): Promise<boolean> {
 
   const choice = await promptLauncherMenu(context.hasSeamlessCoop);
   if (!choice) return false;
+
+  if (choice === "uninstall") {
+    const result = await uninstall(context.gameDir);
+    printUninstallResult(result);
+    return false;
+  }
 
   if (choice === "seamless_coop" && !context.hasSeamlessCoop) {
     error("[!] Seamless Coop launcher (NRSC_launcher.exe) not found in the game directory.");

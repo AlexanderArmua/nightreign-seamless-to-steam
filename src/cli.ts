@@ -80,10 +80,11 @@ export async function promptMenu<T>(
     }
     for (let i = 0; i < options.length; i++) {
       process.stdout.write("\x1b[2K"); // clear line
+      const num = `${i + 1}.`;
       if (i === selected) {
-        process.stdout.write(`${COLORS.green}  > ${options[i].label}${COLORS.reset}\n`);
+        process.stdout.write(`${COLORS.green}  > ${num} ${options[i].label}${COLORS.reset}\n`);
       } else {
-        process.stdout.write(`${COLORS.white}    ${options[i].label}${COLORS.reset}\n`);
+        process.stdout.write(`${COLORS.white}    ${num} ${options[i].label}${COLORS.reset}\n`);
       }
     }
   };
@@ -130,6 +131,16 @@ export async function promptMenu<T>(
         cleanup();
         console.log(); // blank line after menu
         resolve(options[selected].value);
+      } else {
+        // Number keys 1-9
+        const num = parseInt(key, 10);
+        if (num >= 1 && num <= options.length) {
+          selected = num - 1;
+          render();
+          cleanup();
+          console.log(); // blank line after menu
+          resolve(options[selected].value);
+        }
       }
     };
 
@@ -160,18 +171,19 @@ export async function promptConversionChoice(
     return null;
   }
 
-  return promptMenu("Select a conversion (↑/↓ to move, Enter to confirm):", options);
+  return promptMenu("Select a conversion (↑/↓ or 1-2, Enter to confirm):", options);
 }
 
 export async function promptStandaloneMenu(): Promise<StandaloneMenuChoice | null> {
   const options: MenuItem<StandaloneMenuChoice>[] = [
     { label: "Copy savegames (convert between Steam/Coop)", value: "copy_saves" },
+    { label: "Download & Install Seamless Co-op", value: "download_coop" },
     { label: "Install Save Manager as game launcher", value: "install" },
     { label: "Uninstall Save Manager from game launcher", value: "uninstall" },
-    { label: "Download & Install Seamless Co-op", value: "download_coop" },
+    { label: "Exit", value: "exit" },
   ];
 
-  return promptMenu("What would you like to do? (↑/↓ to move, Enter to confirm):", options);
+  return promptMenu("What would you like to do? (↑/↓ or 1-5, Enter to confirm):", options);
 }
 
 export async function promptLauncherMenu(hasSeamlessCoop: boolean): Promise<LauncherMenuChoice | null> {
@@ -185,7 +197,9 @@ export async function promptLauncherMenu(hasSeamlessCoop: boolean): Promise<Laun
     options.push({ label: "Seamless Coop (not installed)", value: "seamless_coop" });
   }
 
-  return promptMenu("Choose how to launch Nightreign (↑/↓ to move, Enter to confirm):", options);
+  options.push({ label: "Uninstall Save Manager", value: "uninstall" });
+
+  return promptMenu("Choose how to launch Nightreign (↑/↓ or 1-3, Enter to confirm):", options);
 }
 
 export async function promptDirectoryInput(prompt: string): Promise<string> {
@@ -254,13 +268,13 @@ export function printUninstallResult(result: UninstallResult): void {
   }
 }
 
-function formatFileSize(bytes: number): string {
+export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatRelativeTime(date: Date): string {
+export function formatRelativeTime(date: Date): string {
   const diffMs = Date.now() - date.getTime();
   const diffSec = Math.floor(diffMs / 1000);
   if (diffSec < 60) return `${diffSec}s ago`;
@@ -281,7 +295,7 @@ export async function promptZipSelection(candidates: ZipCandidate[]): Promise<Zi
     value: null,
   });
 
-  return promptMenu("Select the downloaded zip file (↑/↓ to move, Enter to confirm):", options);
+  return promptMenu("Select the downloaded zip file (↑/↓ or 1-N, Enter to confirm):", options);
 }
 
 export async function promptPressAnyKey(message: string): Promise<void> {

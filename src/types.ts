@@ -51,9 +51,9 @@ export interface MenuItem<T> {
 
 export type AppMode = "standalone" | "launcher";
 
-export type StandaloneMenuChoice = "copy_saves" | "install" | "uninstall" | "download_coop";
+export type StandaloneMenuChoice = "copy_saves" | "install" | "uninstall" | "download_coop" | "exit";
 
-export type LauncherMenuChoice = "classic" | "seamless_coop";
+export type LauncherMenuChoice = "classic" | "seamless_coop" | "uninstall";
 
 export interface LauncherContext {
   gameDir: string;
