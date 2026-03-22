@@ -18,9 +18,14 @@ export interface ConversionChoice {
   to: SaveFormat;
 }
 
-export interface ConversionResult {
+export interface ConvertedFile {
+  baseName: string;
   mainConverted: boolean;
   bakConverted: boolean;
+}
+
+export interface ConversionResult {
+  files: ConvertedFile[];
   fromExt: string;
   toExt: string;
 }
@@ -28,6 +33,7 @@ export interface ConversionResult {
 export interface ParsedArgs {
   choice: ConversionChoice | null;
   testMode: boolean;
+  dryRun: boolean;
 }
 
 export class SaveDirectoryNotFoundError extends Error {
@@ -68,6 +74,7 @@ export interface InstallResult {
   originalRenamed: boolean;
   exeCopied: boolean;
   seamlessCoopDetected: boolean;
+  rollbackFailed?: boolean;
 }
 
 export interface UninstallResult {
@@ -92,7 +99,3 @@ export interface ModInstallResult {
   error?: string;
 }
 
-export interface GameDirDetectionResult {
-  found: boolean;
-  path: string | null;
-}

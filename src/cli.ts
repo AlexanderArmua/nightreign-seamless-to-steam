@@ -48,18 +48,18 @@ export function printBanner(): void {
 }
 
 export function printConversionResult(result: ConversionResult): void {
-  const baseName = "NR0000";
+  for (const file of result.files) {
+    if (file.mainConverted) {
+      success(`[+] Converted: ${file.baseName}${result.fromExt} -> ${file.baseName}${result.toExt}`);
+    } else {
+      error(`[!] Error: File ${file.baseName}${result.fromExt} not found.`);
+    }
 
-  if (result.mainConverted) {
-    success(`[+] Converted: ${baseName}${result.fromExt} -> ${baseName}${result.toExt}`);
-  } else {
-    error(`[!] Error: File ${baseName}${result.fromExt} not found.`);
-  }
-
-  if (result.bakConverted) {
-    success(`[+] Converted: ${baseName}${result.fromExt}.bak -> ${baseName}${result.toExt}.bak`);
-  } else {
-    warning(`[!] Warning: File ${baseName}${result.fromExt}.bak not found.`);
+    if (file.bakConverted) {
+      success(`[+] Converted: ${file.baseName}${result.fromExt}.bak -> ${file.baseName}${result.toExt}.bak`);
+    } else {
+      warning(`[!] Warning: File ${file.baseName}${result.fromExt}.bak not found.`);
+    }
   }
 }
 
@@ -202,6 +202,35 @@ export async function promptLauncherMenu(hasSeamlessCoop: boolean): Promise<Laun
   return promptMenu("Choose how to launch Nightreign (↑/↓ or 1-3, Enter to confirm):", options);
 }
 
+export async function promptGameDirSelection(paths: string[]): Promise<string | null> {
+  const options: MenuItem<string | null>[] = paths.map((p) => ({
+    label: p,
+    value: p,
+  }));
+
+  options.push({
+    label: "Browse manually...",
+    value: null,
+  });
+
+  return promptMenu(
+    "Game installation(s) found. Select one (↑/↓, Enter to confirm):",
+    options
+  );
+}
+
+export async function promptSteamIdSelection(folderNames: string[]): Promise<string | null> {
+  const options: MenuItem<string>[] = folderNames.map((name) => ({
+    label: `Steam ID: ${name}`,
+    value: name,
+  }));
+
+  return promptMenu(
+    "Multiple Steam accounts found. Which one would you like to use? (↑/↓, Enter to confirm):",
+    options
+  );
+}
+
 export async function promptDirectoryInput(prompt: string): Promise<string> {
   info(prompt);
   process.stdout.write(`${COLORS.green}> ${COLORS.reset}`);
@@ -237,7 +266,11 @@ export function printInstallResult(result: InstallResult): void {
     info('\nNext time you click "Play" in Steam, Save Manager will appear.');
   } else {
     error("\n[!] Installation failed.");
-    if (!result.originalRenamed) {
+    if (result.rollbackFailed) {
+      error("    CRITICAL: Could not restore the original launcher after failed install.");
+      warning("    Please verify game files through Steam:");
+      warning("    Right-click game → Properties → Installed Files → Verify integrity of game files");
+    } else if (!result.originalRenamed) {
       error("    Could not find or rename the original game launcher.");
       info("    Make sure the game directory contains start_protected_game.exe");
     } else if (!result.exeCopied) {
@@ -327,9 +360,9 @@ export function printModInstallResult(result: ModInstallResult): void {
     info(`    Game directory: ${result.gameDir}`);
     info(`    Zip file: ${result.zipPath}`);
     if (result.launcherFound) {
-      success("    [+] NRSC_launcher.exe found — mod is ready to use");
+      success("    [+] nrsc_launcher.exe found — mod is ready to use");
     } else {
-      warning("    [!] NRSC_launcher.exe not found — the zip may not contain the expected mod files");
+      warning("    [!] nrsc_launcher.exe not found — the zip may not contain the expected mod files");
     }
   } else {
     error("\n[!] Seamless Co-op installation failed.");
@@ -350,12 +383,93 @@ export function waitForExit(): void {
 
 export function parseArgs(argv: string[]): ParsedArgs {
   const testMode = argv.includes("--test");
+  const dryRun = argv.includes("--dry-run");
 
   if (argv.includes("--to-steam")) {
-    return { choice: { from: "coop", to: "steam" }, testMode };
+    return { choice: { from: "coop", to: "steam" }, testMode, dryRun };
   }
   if (argv.includes("--to-coop")) {
-    return { choice: { from: "steam", to: "coop" }, testMode };
+    return { choice: { from: "steam", to: "coop" }, testMode, dryRun };
   }
-  return { choice: null, testMode };
+  return { choice: null, testMode, dryRun };
+}
+
+export async function promptConfirmation(message: string): Promise<boolean> {
+  process.stdout.write(`${COLORS.white}${message} ${COLORS.green}(Y/n) ${COLORS.reset}`);
+
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+  }
+  process.stdin.resume();
+
+  return new Promise<boolean>((resolve) => {
+    process.stdin.once("data", (data: Buffer) => {
+      const key = data.toString().toLowerCase();
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(false);
+      }
+      process.stdin.pause();
+      console.log();
+      resolve(key !== "n");
+    });
+  });
+}
+
+export function printVersionInfo(version: string, sha256: string | null): void {
+  const hash = sha256 ? `SHA256: ${sha256}` : "";
+  info(`  Save Manager v${version}${hash ? `  |  ${hash}` : ""}\n`);
+}
+
+export function printDryRunSummary(
+  state: import("./types.js").SaveDirectoryState,
+  choice: import("./types.js").ConversionChoice,
+  fromExt: string,
+  toExt: string
+): void {
+  const saveFiles = state.files.filter(
+    (f) => f.endsWith(fromExt) && !f.endsWith(`${fromExt}.bak`)
+  );
+  const bakFiles = state.files.filter((f) => f.endsWith(`${fromExt}.bak`));
+  const protectedFiles = state.files.filter((f) =>
+    ["steam_autocloud.vdf"].includes(f)
+  );
+  const otherFiles = state.files.filter(
+    (f) =>
+      !f.endsWith(fromExt) &&
+      !f.endsWith(`${fromExt}.bak`) &&
+      !protectedFiles.includes(f)
+  );
+
+  warning("=== DRY RUN — No changes will be made ===\n");
+  info(`  Save directory: ${state.targetDir}`);
+  info(`  Steam ID: ${state.steamIdFolder}`);
+  info(`  Conversion: ${choice.from} (${fromExt}) -> ${choice.to} (${toExt})\n`);
+
+  info("  Files found:");
+  for (const f of saveFiles) {
+    info(`    ${f} (will be converted)`);
+  }
+  for (const f of bakFiles) {
+    info(`    ${f} (backup variant, will be converted if exists)`);
+  }
+  for (const f of protectedFiles) {
+    success(`    ${f} (protected, will NOT be modified)`);
+  }
+  for (const f of otherFiles) {
+    warning(`    ${f} (will be deleted)`);
+  }
+
+  info(`\n  Would create backup: backup_<timestamp>/`);
+  info("  Would delete all non-protected files from save directory");
+  info("  Would create:");
+  for (const f of saveFiles) {
+    const baseName = f.slice(0, -fromExt.length);
+    success(`    ${baseName}${toExt} (from ${f})`);
+  }
+  for (const f of bakFiles) {
+    const baseName = f.slice(0, -`${fromExt}.bak`.length);
+    success(`    ${baseName}${toExt}.bak (from ${f})`);
+  }
+
+  warning("\n=== DRY RUN COMPLETE — No files were modified ===");
 }

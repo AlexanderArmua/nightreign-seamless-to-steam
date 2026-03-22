@@ -22,7 +22,10 @@ beforeEach(() => {
 
 describe("createBackup", () => {
   it("creates timestamped backup directory", async () => {
-    mockStat.mockResolvedValue({ isFile: () => true } as any);
+    // First call: srcStat (isFile + size), second call: destStat (size check)
+    mockStat
+      .mockResolvedValueOnce({ isFile: () => true, size: 100 } as any)
+      .mockResolvedValueOnce({ size: 100 } as any);
     mockCopyFile.mockResolvedValue(undefined);
 
     const result = await createBackup("/appdata/Nightreign/12345", ["NR0000.sl2"]);
@@ -49,12 +52,29 @@ describe("createBackup", () => {
     expect(result).toContain("backup_");
   });
 
-  it("copies multiple files", async () => {
-    mockStat.mockResolvedValue({ isFile: () => true } as any);
+  it("copies multiple files with integrity verification", async () => {
+    mockStat
+      .mockResolvedValueOnce({ isFile: () => true, size: 100 } as any)
+      .mockResolvedValueOnce({ size: 100 } as any)
+      .mockResolvedValueOnce({ isFile: () => true, size: 50 } as any)
+      .mockResolvedValueOnce({ size: 50 } as any);
     mockCopyFile.mockResolvedValue(undefined);
 
     await createBackup("/appdata/Nightreign/12345", ["NR0000.sl2", "NR0000.sl2.bak"]);
 
     expect(mockCopyFile).toHaveBeenCalledTimes(2);
+    // Stat called 4 times: src+dest for each file
+    expect(mockStat).toHaveBeenCalledTimes(4);
+  });
+
+  it("throws when backup integrity check fails (size mismatch)", async () => {
+    mockStat
+      .mockResolvedValueOnce({ isFile: () => true, size: 100 } as any)
+      .mockResolvedValueOnce({ size: 50 } as any); // size mismatch!
+    mockCopyFile.mockResolvedValue(undefined);
+
+    await expect(
+      createBackup("/appdata/Nightreign/12345", ["NR0000.sl2"])
+    ).rejects.toThrow("Backup integrity check failed");
   });
 });

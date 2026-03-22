@@ -69,7 +69,22 @@ describe("install", () => {
 
     expect(result.success).toBe(false);
     expect(result.exeCopied).toBe(false);
+    expect(result.rollbackFailed).toBeUndefined();
     expect(mockRename).toHaveBeenCalledTimes(2);
+  });
+
+  it("reports rollback failure when restore also fails", async () => {
+    mockAccess.mockResolvedValue(undefined);
+    // First rename succeeds (original → backup), second rename fails (restore)
+    mockRename
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("restore failed"));
+    mockCopyFile.mockRejectedValue(new Error("copy failed"));
+
+    const result = await install("/game");
+
+    expect(result.success).toBe(false);
+    expect(result.rollbackFailed).toBe(true);
   });
 });
 

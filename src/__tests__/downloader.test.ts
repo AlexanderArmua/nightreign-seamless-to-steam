@@ -18,7 +18,7 @@ vi.mock("child_process", () => ({
 }));
 
 import fs from "fs/promises";
-import { getDownloadsFolder, scanForZipFiles, installMod, detectGameDirectory, extractZip, openUrl, openFilePicker, openFolderPicker } from "../downloader.js";
+import { getDownloadsFolder, scanForZipFiles, installMod, detectGameDirectories, extractZip, openUrl, openFilePicker, openFolderPicker } from "../downloader.js";
 
 const mockReaddir = vi.mocked(fs.readdir);
 const mockStat = vi.mocked(fs.stat);
@@ -140,55 +140,58 @@ describe("scanForZipFiles", () => {
   });
 });
 
-describe("detectGameDirectory", () => {
-  it("finds game at default Steam path", async () => {
-    mockStat.mockResolvedValueOnce({ isDirectory: () => true } as any);
-
-    const result = await detectGameDirectory();
-
-    expect(result.found).toBe(true);
-    expect(result.path).toContain("ELDEN RING NIGHTREIGN");
-  });
-
-  it("finds game in library folder from vdf", async () => {
-    // Default path fails
-    mockStat.mockRejectedValueOnce(new Error("ENOENT"));
-    // VDF content with library path
+describe("detectGameDirectories", () => {
+  it("finds game via vdf library path", async () => {
     const mockReadFile = vi.mocked(fs.readFile);
-    mockReadFile.mockResolvedValueOnce(
-      `"libraryfolders"\n{\n  "0"\n  {\n    "path"    "D:\\\\SteamLibrary"\n  }\n}` as any
-    );
-    // Game found in library
-    mockStat.mockResolvedValueOnce({ isDirectory: () => true } as any);
+    // VDF found at default Steam path
+    mockReadFile.mockImplementation(async (p: any) => {
+      if (String(p).includes("libraryfolders.vdf")) {
+        return `"libraryfolders"\n{\n  "0"\n  {\n    "path"    "C:\\\\Program Files (x86)\\\\Steam"\n  }\n}` as any;
+      }
+      throw new Error("ENOENT");
+    });
+    // Game found at the library path
+    mockStat.mockImplementation(async (p: any) => {
+      if (String(p).includes("ELDEN RING NIGHTREIGN")) {
+        return { isDirectory: () => true } as any;
+      }
+      throw new Error("ENOENT");
+    });
 
-    const result = await detectGameDirectory();
+    const result = await detectGameDirectories();
 
-    expect(result.found).toBe(true);
-    expect(result.path).toContain("SteamLibrary");
+    expect(result.length).toBeGreaterThanOrEqual(1);
+    expect(result[0]).toContain("ELDEN RING NIGHTREIGN");
   });
 
-  it("returns not found when game not anywhere", async () => {
+  it("returns empty when game not anywhere", async () => {
     mockStat.mockRejectedValue(new Error("ENOENT"));
     const mockReadFile = vi.mocked(fs.readFile);
-    mockReadFile.mockRejectedValueOnce(new Error("ENOENT"));
+    mockReadFile.mockRejectedValue(new Error("ENOENT"));
 
-    const result = await detectGameDirectory();
+    const result = await detectGameDirectories();
 
-    expect(result.found).toBe(false);
-    expect(result.path).toBeNull();
+    expect(result).toHaveLength(0);
   });
 
-  it("returns not found when vdf has no matching library", async () => {
-    mockStat.mockRejectedValue(new Error("ENOENT"));
+  it("finds game on multiple drives", async () => {
     const mockReadFile = vi.mocked(fs.readFile);
-    mockReadFile.mockResolvedValueOnce(
-      `"libraryfolders"\n{\n  "0"\n  {\n    "path"    "E:\\\\Games"\n  }\n}` as any
-    );
+    mockReadFile.mockRejectedValue(new Error("ENOENT"));
+    // Game exists at two locations via direct path check
+    mockStat.mockImplementation(async (p: any) => {
+      const s = String(p);
+      if (s.includes("C:\\Program Files (x86)\\Steam") && s.includes("NIGHTREIGN")) {
+        return { isDirectory: () => true } as any;
+      }
+      if (s.includes("D:\\SteamLibrary") && s.includes("NIGHTREIGN")) {
+        return { isDirectory: () => true } as any;
+      }
+      throw new Error("ENOENT");
+    });
 
-    const result = await detectGameDirectory();
+    const result = await detectGameDirectories();
 
-    expect(result.found).toBe(false);
-    expect(result.path).toBeNull();
+    expect(result.length).toBe(2);
   });
 });
 
@@ -254,6 +257,38 @@ describe("extractZip", () => {
       expect.stringContaining("nrsc-extract-"),
       { recursive: true, force: true }
     );
+  });
+
+  it("rejects path traversal in zip entries", async () => {
+    mockMkdir.mockResolvedValue(undefined as any);
+    mockExecFileSync.mockReturnValue(Buffer.from(""));
+    mockReaddir
+      .mockResolvedValueOnce(["../../evil.exe"] as any)
+      .mockResolvedValueOnce(["../../evil.exe"] as any);
+    mockStat.mockResolvedValueOnce({ isDirectory: () => false } as any);
+    mockRm.mockResolvedValue(undefined);
+
+    const result = await extractZip("/path/mod.zip", "/game");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Unsafe path");
+    expect(mockCp).not.toHaveBeenCalled();
+  });
+
+  it("escapes single quotes in zip path for PowerShell", async () => {
+    mockMkdir.mockResolvedValue(undefined as any);
+    mockExecFileSync.mockReturnValue(Buffer.from(""));
+    mockReaddir
+      .mockResolvedValueOnce(["file.dll"] as any)
+      .mockResolvedValueOnce(["file.dll"] as any);
+    mockStat.mockResolvedValueOnce({ isDirectory: () => false } as any);
+    mockCp.mockResolvedValue(undefined);
+    mockRm.mockResolvedValue(undefined);
+
+    await extractZip("/path/it's a mod.zip", "/game");
+
+    const psCommand = mockExecFileSync.mock.calls[0][1]![2] as string;
+    expect(psCommand).toContain("it''s a mod.zip");
   });
 });
 
@@ -389,7 +424,7 @@ describe("installMod", () => {
     // extractZip internals
     mockMkdir.mockResolvedValue(undefined as any);
     mockExecFileSync.mockReturnValue(Buffer.from(""));
-    mockReaddir.mockResolvedValueOnce(["NRSC_launcher.exe"] as any); // tempDir entries
+    mockReaddir.mockResolvedValueOnce(["nrsc_launcher.exe"] as any); // tempDir entries
     mockStat.mockResolvedValueOnce({ isDirectory: () => false } as any); // single entry check
     mockCp.mockResolvedValue(undefined);
     mockRm.mockResolvedValue(undefined);

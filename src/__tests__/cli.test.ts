@@ -6,6 +6,8 @@ import {
   printInstallResult,
   printUninstallResult,
   printModInstallResult,
+  printVersionInfo,
+  printDryRunSummary,
   success,
   warning,
   error,
@@ -112,8 +114,7 @@ describe("printConversionResult", () => {
 
   it("prints success for mainConverted + bakConverted", () => {
     printConversionResult({
-      mainConverted: true,
-      bakConverted: true,
+      files: [{ baseName: "NR0000", mainConverted: true, bakConverted: true }],
       fromExt: ".sl2",
       toExt: ".co2",
     });
@@ -123,8 +124,7 @@ describe("printConversionResult", () => {
 
   it("prints error when main not converted", () => {
     printConversionResult({
-      mainConverted: false,
-      bakConverted: false,
+      files: [{ baseName: "NR0000", mainConverted: false, bakConverted: false }],
       fromExt: ".sl2",
       toExt: ".co2",
     });
@@ -133,14 +133,29 @@ describe("printConversionResult", () => {
 
   it("prints warning when bak not converted", () => {
     printConversionResult({
-      mainConverted: true,
-      bakConverted: false,
+      files: [{ baseName: "NR0000", mainConverted: true, bakConverted: false }],
       fromExt: ".co2",
       toExt: ".sl2",
     });
     // first call is success for main, second is warning for bak
     expect(console.log).toHaveBeenCalledTimes(2);
     expect((console.log as any).mock.calls[1][0]).toContain("Warning");
+  });
+
+  it("prints results for multiple save files", () => {
+    printConversionResult({
+      files: [
+        { baseName: "NR0000", mainConverted: true, bakConverted: true },
+        { baseName: "NR0001", mainConverted: true, bakConverted: false },
+      ],
+      fromExt: ".sl2",
+      toExt: ".co2",
+    });
+    // NR0000: success + success, NR0001: success + warning = 4 console.log calls
+    expect(console.log).toHaveBeenCalledTimes(4);
+    const allOutput = (console.log as any).mock.calls.map((c: any) => c[0]).join("\n");
+    expect(allOutput).toContain("NR0000.sl2 -> NR0000.co2");
+    expect(allOutput).toContain("NR0001.sl2 -> NR0001.co2");
   });
 });
 
@@ -203,6 +218,21 @@ describe("printInstallResult", () => {
     });
     const allErrors = (console.error as any).mock.calls.map((c: any) => c[0]).join("\n");
     expect(allErrors).toContain("Could not copy");
+  });
+
+  it("prints critical rollback failure message", () => {
+    printInstallResult({
+      success: false,
+      gameDirPath: "/game",
+      originalRenamed: true,
+      exeCopied: false,
+      seamlessCoopDetected: false,
+      rollbackFailed: true,
+    });
+    const allErrors = (console.error as any).mock.calls.map((c: any) => c[0]).join("\n");
+    expect(allErrors).toContain("CRITICAL");
+    const allWarnings = (console.log as any).mock.calls.map((c: any) => c[0]).join("\n");
+    expect(allWarnings).toContain("Verify");
   });
 });
 
@@ -269,7 +299,7 @@ describe("printModInstallResult", () => {
     });
     const allOutput = (console.log as any).mock.calls.map((c: any) => c[0]).join("\n");
     expect(allOutput).toContain("installed successfully");
-    expect(allOutput).toContain("NRSC_launcher.exe found");
+    expect(allOutput).toContain("nrsc_launcher.exe found");
   });
 
   it("prints success with launcher not found", () => {
@@ -280,7 +310,7 @@ describe("printModInstallResult", () => {
       launcherFound: false,
     });
     const allOutput = (console.log as any).mock.calls.map((c: any) => c[0]).join("\n");
-    expect(allOutput).toContain("NRSC_launcher.exe not found");
+    expect(allOutput).toContain("nrsc_launcher.exe not found");
   });
 
   it("prints failure with error", () => {
@@ -305,6 +335,62 @@ describe("printModInstallResult", () => {
     });
     const allErrors = (console.error as any).mock.calls.map((c: any) => c[0]).join("\n");
     expect(allErrors).toContain("installation failed");
+  });
+});
+
+describe("printVersionInfo", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("prints version and hash", () => {
+    printVersionInfo("2.0.0", "abc123def456");
+    const output = (console.log as any).mock.calls[0][0];
+    expect(output).toContain("v2.0.0");
+    expect(output).toContain("SHA256: abc123def456");
+  });
+
+  it("prints version without hash when null", () => {
+    printVersionInfo("2.0.0", null);
+    const output = (console.log as any).mock.calls[0][0];
+    expect(output).toContain("v2.0.0");
+    expect(output).not.toContain("SHA256");
+  });
+});
+
+describe("printDryRunSummary", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("shows what would happen without modifying files", () => {
+    printDryRunSummary(
+      {
+        targetDir: "/saves/12345",
+        steamIdFolder: "12345",
+        hasSteamSave: true,
+        hasCoopSave: false,
+        files: ["NR0000.sl2", "NR0000.sl2.bak", "steam_autocloud.vdf"],
+      },
+      { from: "steam", to: "coop" },
+      ".sl2",
+      ".co2"
+    );
+    const allOutput = (console.log as any).mock.calls.map((c: any) => c[0]).join("\n");
+    expect(allOutput).toContain("DRY RUN");
+    expect(allOutput).toContain("NR0000.sl2");
+    expect(allOutput).toContain("NR0000.co2");
+    expect(allOutput).toContain("protected");
+    expect(allOutput).toContain("No files were modified");
   });
 });
 
