@@ -414,8 +414,10 @@ async function runLauncherMode(): Promise<boolean> {
   info(`\n[+] Launching ${modeName}...`);
   info(`    Executable: ${targetExe}`);
 
-  const launched = await launchGame(targetExe);
-  if (!launched) {
+  const result = await launchGame(targetExe);
+  info(`    Command: cmd /S /c ${result.command}`);
+
+  if (!result.launched) {
     error(`\n[!] Failed to launch ${modeName}.`);
     error(`    Could not start: ${targetExe}`);
     error("    Please verify the file exists and is not blocked by antivirus.");

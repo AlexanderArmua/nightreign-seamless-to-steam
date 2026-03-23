@@ -2,34 +2,38 @@ import { spawn } from "child_process";
 import fs from "fs/promises";
 import path from "path";
 
-export async function launchGame(executablePath: string): Promise<boolean> {
+export async function launchGame(executablePath: string): Promise<{ launched: boolean; command: string }> {
   // Verify the executable exists before trying to launch it
   try {
     await fs.access(executablePath);
   } catch {
-    return false;
+    return { launched: false, command: "" };
   }
 
+  const dir = path.dirname(executablePath);
+  const exe = path.basename(executablePath);
+
+  // Build the full command as a single string after /c so cmd.exe doesn't
+  // corrupt the quoting. /S prevents cmd's automatic quote-stripping.
+  const command = `start /d "${dir}" "" "${exe}"`;
+
   try {
-    // Use "cmd /c start" to launch via ShellExecuteEx (equivalent to double-clicking).
-    // This is required for nrsc_launcher.exe which needs the ShellExecute context
-    // to properly inject Seamless Co-op DLLs into the game process.
-    const child = spawn("cmd", ["/c", "start", "/d", path.dirname(executablePath), "", path.basename(executablePath)], {
+    const child = spawn("cmd", ["/S", "/c", command], {
       detached: true,
       stdio: "ignore",
     });
 
-    return new Promise<boolean>((resolve) => {
+    return new Promise((resolve) => {
       child.on("error", () => {
-        resolve(false);
+        resolve({ launched: false, command });
       });
 
       child.on("spawn", () => {
         child.unref();
-        resolve(true);
+        resolve({ launched: true, command });
       });
     });
   } catch {
-    return false;
+    return { launched: false, command };
   }
 }
