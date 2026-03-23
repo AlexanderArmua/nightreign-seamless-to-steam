@@ -29,7 +29,32 @@ export async function install(gameDir: string): Promise<InstallResult> {
     // Not found — not required for install, but we note it
   }
 
-  // Rename the original launcher to the backup name
+  // Check if already installed (backup of original launcher exists)
+  let alreadyInstalled = false;
+  try {
+    await fs.access(backupPath);
+    alreadyInstalled = true;
+  } catch {
+    // Not installed yet
+  }
+
+  if (alreadyInstalled) {
+    // Already installed — just update the replacement exe without touching the backup
+    result.alreadyInstalled = true;
+    result.originalRenamed = true; // backup already exists from previous install
+
+    try {
+      await fs.copyFile(process.execPath, replacementPath);
+      result.exeCopied = true;
+    } catch {
+      return result;
+    }
+
+    result.success = true;
+    return result;
+  }
+
+  // First-time install: rename the original launcher to the backup name
   try {
     await fs.access(originalPath);
     await fs.rename(originalPath, backupPath);

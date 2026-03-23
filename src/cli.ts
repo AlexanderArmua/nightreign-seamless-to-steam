@@ -250,9 +250,15 @@ export async function promptDirectoryInput(prompt: string): Promise<string> {
 
 export function printInstallResult(result: InstallResult): void {
   if (result.success) {
-    success("\n[+] Save Manager installed successfully!");
+    if (result.alreadyInstalled) {
+      success("\n[+] Save Manager updated successfully!");
+    } else {
+      success("\n[+] Save Manager installed successfully!");
+    }
     info(`    Game directory: ${result.gameDirPath}`);
-    if (result.originalRenamed) {
+    if (result.alreadyInstalled) {
+      success("    [+] Previous installation detected — launcher updated");
+    } else if (result.originalRenamed) {
       success("    [+] Original launcher backed up");
     }
     if (result.exeCopied) {
