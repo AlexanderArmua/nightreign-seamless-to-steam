@@ -11,19 +11,19 @@ export async function launchGame(executablePath: string): Promise<boolean> {
   }
 
   try {
-    const child = spawn(executablePath, [], {
+    // Use "cmd /c start" to launch via ShellExecuteEx (equivalent to double-clicking).
+    // This is required for nrsc_launcher.exe which needs the ShellExecute context
+    // to properly inject Seamless Co-op DLLs into the game process.
+    const child = spawn("cmd", ["/c", "start", "/d", path.dirname(executablePath), "", path.basename(executablePath)], {
       detached: true,
       stdio: "ignore",
-      cwd: path.dirname(executablePath),
     });
 
-    // Listen for spawn errors (e.g., EACCES, file not executable)
     return new Promise<boolean>((resolve) => {
       child.on("error", () => {
         resolve(false);
       });
 
-      // If no error fires within 1 second, assume launch succeeded
       child.on("spawn", () => {
         child.unref();
         resolve(true);
