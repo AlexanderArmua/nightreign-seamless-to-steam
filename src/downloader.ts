@@ -3,15 +3,19 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import {
-  DEFAULT_STEAM_PATH,
+  COMMON_STEAM_PATHS,
   GAME_RELATIVE_PATH,
   SEAMLESS_COOP_LAUNCHER_NAME,
 } from "./config.js";
 import type {
   ZipCandidate,
   ModInstallResult,
-  GameDirDetectionResult,
 } from "./types.js";
+
+/** Escape a string for use inside PowerShell single-quoted strings ('…'). */
+function escapePowerShellString(value: string): string {
+  return value.replace(/'/g, "''");
+}
 
 export function openUrl(url: string): boolean {
   try {
@@ -85,42 +89,49 @@ export async function scanForZipFiles(directory: string): Promise<ZipCandidate[]
   }
 }
 
-export async function detectGameDirectory(): Promise<GameDirDetectionResult> {
-  // 1. Check default Steam path
-  const defaultGameDir = path.join(DEFAULT_STEAM_PATH, GAME_RELATIVE_PATH);
-  try {
-    const stat = await fs.stat(defaultGameDir);
-    if (stat.isDirectory()) {
-      return { found: true, path: defaultGameDir };
-    }
-  } catch {
-    // Not found at default location
-  }
+/**
+ * Scans common Steam installation paths and libraryfolders.vdf files
+ * across multiple drives to find all Nightreign game installations.
+ * Returns an array of unique game directory paths.
+ */
+export async function detectGameDirectories(): Promise<string[]> {
+  const found = new Set<string>();
 
-  // 2. Parse Steam's libraryfolders.vdf for additional library paths
-  const vdfPath = path.join(DEFAULT_STEAM_PATH, "config", "libraryfolders.vdf");
-  try {
-    const vdfContent = await fs.readFile(vdfPath, "utf-8");
-    const pathRegex = /"path"\s+"([^"]+)"/g;
-    let match: RegExpExecArray | null;
+  // Collect all potential Steam library folders
+  const libraryFolders = new Set<string>();
 
-    while ((match = pathRegex.exec(vdfContent)) !== null) {
-      const libraryPath = match[1].replace(/\\\\/g, "\\");
-      const gameDir = path.join(libraryPath, GAME_RELATIVE_PATH);
-      try {
-        const stat = await fs.stat(gameDir);
-        if (stat.isDirectory()) {
-          return { found: true, path: gameDir };
-        }
-      } catch {
-        // Game not in this library folder
+  for (const steamPath of COMMON_STEAM_PATHS) {
+    // Check if this path is a Steam installation (has config/libraryfolders.vdf)
+    const vdfPath = path.join(steamPath, "config", "libraryfolders.vdf");
+    try {
+      const vdfContent = await fs.readFile(vdfPath, "utf-8");
+      const pathRegex = /"path"\s+"([^"]+)"/g;
+      let match: RegExpExecArray | null;
+      while ((match = pathRegex.exec(vdfContent)) !== null) {
+        libraryFolders.add(match[1].replace(/\\\\/g, "\\"));
       }
+    } catch {
+      // Not a Steam installation or can't read VDF
     }
-  } catch {
-    // VDF file not found or can't be read
+
+    // Also check if this path is itself a Steam library folder
+    libraryFolders.add(steamPath);
   }
 
-  return { found: false, path: null };
+  // Check each library folder for the game
+  for (const libPath of libraryFolders) {
+    const gameDir = path.join(libPath, GAME_RELATIVE_PATH);
+    try {
+      const stat = await fs.stat(gameDir);
+      if (stat.isDirectory()) {
+        found.add(gameDir);
+      }
+    } catch {
+      // Game not in this library folder
+    }
+  }
+
+  return [...found];
 }
 
 export async function extractZip(
@@ -136,7 +147,7 @@ export async function extractZip(
     execFileSync("powershell", [
       "-NoProfile",
       "-Command",
-      `Expand-Archive -Path '${zipPath}' -DestinationPath '${tempDir}' -Force`,
+      `Expand-Archive -Path '${escapePowerShellString(zipPath)}' -DestinationPath '${escapePowerShellString(tempDir)}' -Force`,
     ], {
       stdio: "pipe",
       timeout: 120000,
@@ -154,11 +165,16 @@ export async function extractZip(
       }
     }
 
-    // Copy contents to game directory
+    // Copy contents to game directory (with path traversal protection)
+    const resolvedTarget = path.resolve(targetDir);
     const sourceEntries = await fs.readdir(sourceDir);
     for (const entry of sourceEntries) {
       const src = path.join(sourceDir, entry);
       const dest = path.join(targetDir, entry);
+      const resolvedDest = path.resolve(dest);
+      if (!resolvedDest.startsWith(resolvedTarget + path.sep) && resolvedDest !== resolvedTarget) {
+        throw new Error(`Unsafe path detected in zip: ${entry}`);
+      }
       await fs.cp(src, dest, { recursive: true });
     }
 
@@ -181,7 +197,7 @@ export function openFilePicker(filter?: string): string | null {
     const platform = process.platform;
 
     if (platform === "win32") {
-      const psFilter = filter || "All files (*.*)|*.*";
+      const psFilter = escapePowerShellString(filter || "All files (*.*)|*.*");
       const script = `
 Add-Type -AssemblyName System.Windows.Forms
 $d = New-Object System.Windows.Forms.OpenFileDialog
@@ -257,7 +273,7 @@ export async function installMod(
     return result;
   }
 
-  // Verify NRSC_launcher.exe exists after extraction
+  // Verify nrsc_launcher.exe exists after extraction
   try {
     await fs.access(path.join(gameDir, SEAMLESS_COOP_LAUNCHER_NAME));
     result.launcherFound = true;

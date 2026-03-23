@@ -14,7 +14,7 @@ vi.mock("fs/promises", () => ({
 
 vi.mock("../config.js", () => ({
   BACKUP_LAUNCHER_NAME: "start_protected_game_original.exe",
-  SEAMLESS_COOP_LAUNCHER_NAME: "NRSC_launcher.exe",
+  SEAMLESS_COOP_LAUNCHER_NAME: "nrsc_launcher.exe",
 }));
 
 import fsSync from "fs";

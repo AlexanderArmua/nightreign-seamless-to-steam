@@ -49,7 +49,8 @@ export async function install(gameDir: string): Promise<InstallResult> {
       await fs.rename(backupPath, originalPath);
       result.originalRenamed = false;
     } catch {
-      // Critical: couldn't restore either
+      // Critical: couldn't restore either — flag for user action
+      result.rollbackFailed = true;
     }
     return result;
   }
