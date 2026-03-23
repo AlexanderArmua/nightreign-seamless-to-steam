@@ -74,6 +74,7 @@ export interface InstallResult {
   originalRenamed: boolean;
   exeCopied: boolean;
   seamlessCoopDetected: boolean;
+  alreadyInstalled?: boolean;
   rollbackFailed?: boolean;
 }
 
